@@ -15,7 +15,7 @@ function refreshData()
  	var unixStr = unix.toString(16);
  	var unixPrint = unixStr.substring(3, 9);
 
- 	var color = '#'+unixPrint;
+ 	var color = '#'+unixPrint.toString();
  	
     $("div.background").css("background-color", color );
     $("p#hex").text(color);
