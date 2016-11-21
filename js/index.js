@@ -1,7 +1,7 @@
 function refreshData()
 {
     x = 1;  // x = seconds
-    var unix = (Math.round(+new Date()/1000))%1000000
+    var unix = (Math.round(+new Date()/1000))
  	//var d = new Date()
  	//var h = d.getHours();
  	//var m = d.getMinutes();
@@ -12,7 +12,10 @@ function refreshData()
 	//if (s<=9) {s = '0'+s};
 	
  	//var	color = '#'+h+m+s;
- 	var color = '#'+unix;
+ 	var unixStr = unix.toString(16);
+ 	var unixPrint = unixStr.substring(3, 9);
+
+ 	var color = '#'+unixPrint;
  	
     $("div.background").css("background-color", color );
     $("p#hex").text(color);
