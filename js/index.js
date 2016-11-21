@@ -13,7 +13,7 @@ function refreshData()
 	
  	//var	color = '#'+h+m+s;
  	var unixStr = unix.toString(16);
- 	var unixPrint = unixStr.substring(3, 9);
+ 	var unixPrint = unixStr.substring(4, 9);
 
  	var color = '#'+unixPrint.toString();
  	
