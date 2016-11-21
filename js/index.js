@@ -12,7 +12,7 @@ function refreshData()
 	//if (s<=9) {s = '0'+s};
 	
  	//var	color = '#'+h+m+s;
- 	var color = '#'unix;
+ 	var color = '#'+unix;
  	
     $("div.background").css("background-color", color );
     $("p#hex").text(color);
