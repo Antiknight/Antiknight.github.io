@@ -1,19 +1,9 @@
 function refreshData()
 {
     x = 1;  // x = seconds
-    var unix = (Math.round(+new Date()/1000))
- 	//var d = new Date()
- 	//var h = d.getHours();
- 	//var m = d.getMinutes();
- 	//var s = d.getSeconds();
- 	
- 	//if (h<=9) {h = '0'+h};
- 	//if (m<=9) {m = '0'+m};
-	//if (s<=9) {s = '0'+s};
-	
- 	//var	color = '#'+h+m+s;
- 	var unixStr = unix.toString(16);
- 	var unixPrint = unixStr.substr(unixStr.length - 6);
+    var unix = (Math.round(+new Date()/1000)) // Get current date in seconds (unix time)
+ 	var unixStr = unix.toString(16); // convert to hex
+ 	var unixPrint = unixStr.substr(unixStr.length - 6); // get last 6 chars for use in the hex color
 
  	var color = '#'+unixPrint.toString();
  	
