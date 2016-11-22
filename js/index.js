@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use strict";
 var size = 3, stepTime = 10, rows, cols, state = [], grid = [], colors = [], canvas, ctx;
 $(document).ready(function () {
@@ -38,6 +39,31 @@ function drawGrid() {
             }
         }
     }
+=======
+function refreshData()
+{
+    x = 1;  // x = seconds
+    var unix = (Math.round(+new Date()/1000))
+ 	//var d = new Date()
+ 	//var h = d.getHours();
+ 	//var m = d.getMinutes();
+ 	//var s = d.getSeconds();
+ 	
+ 	//if (h<=9) {h = '0'+h};
+ 	//if (m<=9) {m = '0'+m};
+	//if (s<=9) {s = '0'+s};
+	
+ 	//var	color = '#'+h+m+s;
+ 	var unixStr = unix.toString(16);
+ 	var unixPrint = unixStr.substring(4, 9);
+
+ 	var color = '#'+unixPrint.toString();
+ 	
+    $("div.background").css("background-color", color );
+    $("p#hex").text(color);
+     
+    setTimeout(refreshData, x*1000);
+>>>>>>> parent of 904f910... substr
 }
 function updateGrid() {
     for (var i = 0; i < cols; i++) {
