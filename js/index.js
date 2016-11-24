@@ -1,497 +1,280 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-
 /**
- * @param {Number} min inclusive
- * @param {Number} max exclusive
- * @return {Number}
+ * Created by nico on 19/11/2016.
  */
-const randomInt = function(min,max){
-  return Math.floor(min + Math.random() * (max - min));
-};
+
+function lerp ( t, a, b ){ return a + t * ( b - a ); }
 /**
- * @param {Number} x row
- * @param {Number} y column
- * @return {Array}
- */
-const neighborCells = function(x,y){
-  return [[x,y-1],[x+1,y],[x,y+1],[x-1,y]];
-};
-/**
- * @param {Number} r row
- * @param {Number} c column
- * @param {Number} max
- * @param {Number} length
- * @return {Array}
- */
-const pathTo = function(r,c,direction,length){
-  return range(1,length+1).map((x) => range(0,x).reduce(([r,c]) => neighborCells(r,c)[direction],[r,c]));
-};
-/**
- * @param {Number} min
- * @param {Number} max
- * @return {Array}
- */
-const range = function(min,max){
-  return [...Array(max - min)].map((x,i) => min + i);
-};
-
-/**
- * @param {Number} rows number of rows in the grid (must be an odd integer)
- * @param {Number} cols number of columns in the grid (must be an integer)
- * @param {Boolean} returnGrid if true then it does not yield the grid
- */
-const generator = function *(rows,cols,returnGrid){
-  // creating the grid
-  let grid = [];
-  for(let r = 0; r < rows; r++){
-    grid.push([]);
-    for(let c = 0; c < cols; c++){
-      grid[r][c] = 1;
-    }
-  }
-  // sets the current position r, c and mark it as path
-  let [ r,c ] = [rows,cols].map(x => randomInt(0,Math.floor(x/2))*2+1);
-  yield [r,c]
-  grid[r][c] = 0;
-
-  let stack = [[r,c,range(0,4)]];
-
-  let directions;
-  let current;
-  while(current = stack.pop()){
-  let [ r, c, directions ] = current;
-
-    while(directions.length > 0){
-      var direction = directions[randomInt(0,directions.length)];
-
-      // removes the current direction we are testing
-      directions.splice(directions.indexOf(direction),1);
-
-      var path = pathTo(r,c,direction,2);
-      // checks if the path is in the grid
-      let isInGrid = [rows,cols].every((x,i) => path[1][i] >= 0 && path[1][i] < x);
-
-      if(isInGrid){
-        // checks is the path contains only walls
-        var containsOnlyWalls = path.every(([r,c]) => grid[r][c]);
-        if(containsOnlyWalls){
-          break
-        }
-      }
-    }
-    if(!containsOnlyWalls) continue
-
-    // sets the cells to path
-    for(let [ r, c ] of path){
-         grid[r][c] = 0;
-         yield [r,c]
-    }
-
-    // sets the new current cell and adds it to the stack
-    if(directions.length != 0) stack.push([r,c,directions]);
-    stack.push(path[1].concat([range(0,4)]));
-  }
-
-  if(returnGrid) yield grid
-};
-
-/**
- * @param {Number} rows number of rows in the grid (must be an odd integer)
- * @param {Number} cols number of columns in the grid (must be an integer)
- * @return {Array} grid
- */
-const DFS = function(rows,cols){
-  const iterator = DFS.generator(rows,cols,true);
-
-  let grid;
-  for(let x of iterator) grid = x;
-
-  return grid
-};
-DFS.generator = generator;
-
-module.exports = DFS
-
-},{}],2:[function(require,module,exports){
-'use strict';
-/**
- * @constructor Node
- * @param {Number} x
- * @param {Number} y
- */
-const Node = function(x,y,i){
-   this.x = x;
-   this.y = y;
-   this.movementCost = i;
-};
-
-module.exports = Node;
-
-},{}],3:[function(require,module,exports){
-'use strict';
-
-const Node = require('./Node');
-// const Heap = require('./Heap');
-
-const heuristic = function(a,b){
-   // manhattan distance
-   return Math.abs(b.x - a.x) + Math.abs(b.y - a.y)
-   // euclidian distance
-   // return Math.sqrt(Math.pow(b.y-a.y,2)+Math.pow(b.x-a.x,2));
-};
-
-const neighbors = function(grid,node,diagonal){
-   let { x, y } = node;
-   let width = grid[0].length;
-   let height = grid.length;
-   // return [[x-1,y],[x+1,y],[x,y-1],[x,y+1],[x-1,y-1],[x+1,y+1],[x-1,y+1],[x+1,y-1]].filter(([x,y]) => x >= 0 && y >= 0 && x < width && y < height).map(([x,y]) => grid[y][x]).filter(x => x.movementCost != 0);
-   let neighbors = [];
-   for(let X = -1; X <= 1; X++){
-      for(let Y = -1; Y <= 1; Y++){
-         if(X != x || Y != y){
-            if((Math.abs(X) === Math.abs(Y) && diagonal) || Math.abs(X) !== Math.abs(Y)){
-               neighbors.push([x+X,y+Y]);
-            }
-         }
-      }
-   }
-   return neighbors
-      .filter(([x,y]) => x >= 0 && y >= 0 && x < width && y < height)
-      .map(([x,y]) => grid[y][x])
-      .filter(x => x.movementCost != 0);
-};
-const comp = function(a,b){
-   return a.f <= b.f
-};
-
-const generator = function*(grid,start,goal,{ onClose, onOpen, onFind, allowDiagonal }){
-   // set containing the start
-   // let openSet = new Heap(comp);
-   let openSet = [];
-   // empty set
-   let closedSet = [];
-
-   // sets the f, g and h cost for the starting node
-   start.g = 0;
-   start.f = start.g + heuristic(start,goal);
-   if(onOpen) yield onOpen(start.x,start.y,start);
-   openSet.push(start);
-
-   let current;
-   while(/*current = openSet.pop()*/openSet.length > 0){
-      // selects the current node to the node with the lower f cost in the open set
-      let current = openSet.reduce((previous,current) => current.f < previous.f ? current : previous);
-
-      // if the current node is the goal
-      if(current.x == goal.x && current.y == goal.y){
-         // let path = [];
-         while(current.parent){
-            // path.push([current.x,current.y]);
-            if(onFind) yield onFind(current.x,current.y,current);
-            current = current.parent;
-         }
-         if(onFind) yield onFind(current.x,current.y,current);
-         return
-      }
-
-      // removes the current node to the open set
-      openSet.splice(openSet.indexOf(current),1);
-
-      // adds the current node to the closed set
-      closedSet.push(current);
-      if(onClose) yield onClose(current.x,current.y,current);
-
-
-      for(let n of neighbors(grid,current,allowDiagonal)){
-         // for each neighbors we check if it has already been visited
-         if(!closedSet.includes(n)){
-            // if not we set g, h and f costs
-            n.parent = current;
-            n.g = n.parent.g + n.movementCost;
-            n.h = heuristic(n,goal);
-            n.f = n.h + n.g;
-            // we check if the neighbor is not in the open set
-            if(!openSet.includes(n)){
-               // if so we need to check if the g cost is lower
-               if(current.g + n.movementCost < n.g){
-                  // if so we update the g and f costs and set the new parent
-                  n.parent = current;
-                  n.g = n.parent.g + n.movementCost;
-                  n.f = n.h + n.g;
-               }
-               openSet.push(n);
-               if(onOpen) yield onOpen(n.x,n.y,n);
-            }
-         }
-      }
-   }
-   return false
-};
-
-const aStar = function(grid,start,goal){
-   let path = [];
-   let iterator = generator(grid,start,goal,{
-      onFind(x,y){
-         return [x,y]
-      }
-   });
-   for(let [ x,y ] of iterator){
-      path.push([x,y]);
-   }
-   return path.reverse();
-};
-aStar.generator = generator;
-module.exports = aStar;
-
-},{"./Node":2}],4:[function(require,module,exports){
-'use strict';
-const { generator } = require('./DFS/DFS');
-const aStar = require('./aStar').generator;
-const Node = require('./Node');
-
-const SIZE = 2;
-const SPEED = 10;
-let COLS = Math.ceil(window.innerWidth/SIZE);
-let ROWS = Math.ceil(window.innerHeight/SIZE);
-
-const OPEN = '#ffc952';
-const CLOSED = '#ff7473';
-const PATH = '#4bf442';
-
-if(COLS % 2 == 0) COLS--;
-if(ROWS % 2 == 0) ROWS--;
-
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-
-canvas.setAttribute('width',COLS*SIZE);
-canvas.setAttribute('height',ROWS*SIZE);
-
-document.body.appendChild(canvas);
-
-function cycle(){
-   var unix = (Math.round(+new Date()/1000)) // Get current date in seconds (unix time)
-   var unixStr = unix.toString(16); // convert to hex
-   var unixPrint = unixStr.substr(unixStr.length - 6); // get last 6 chars for use in the hex color
-   var color = '#'+unixPrint.toString();
-   var oppcolor = hexToComplimentary(color);
-   var testcolor = hexToComplimentary2(color);
-   ctx.fillStyle = '000000';
-   ctx.beginPath();
-   ctx.rect(0,0,canvas.width,canvas.height);
-   ctx.fill();
-   ctx.fillStyle = color;
-   const iterator = generator(COLS,ROWS,true);
-   function maze(iterator,next){
-      return function(){
-        let i = SPEED*5;
-        do{
-         let [ x, y ] = next.value;
-         if(typeof(x) != 'number'){
-            let grid = next.value.map((s,y) =>  s.map((wall,x) => new Node(x,y,wall == 1 ? 0 : 1)));
-            let algorithm = aStar(grid,grid[1][1],grid[COLS-2][ROWS-2],{
-               onClose(x,y){
-                  ctx.fillStyle = oppcolor;
-                  ctx.beginPath();
-                  ctx.rect(y*SIZE,x*SIZE,SIZE,SIZE);
-                  ctx.fill();
-               },
-               onOpen(x,y){
-                  ctx.fillStyle = OPEN;
-                  ctx.beginPath();
-                  ctx.rect(y*SIZE,x*SIZE,SIZE,SIZE);
-                  ctx.fill();
-               },
-               onFind(x,y){
-                  ctx.fillStyle = testcolor;
-                  ctx.beginPath();
-                  ctx.rect(y*SIZE,x*SIZE,SIZE,SIZE);
-                  ctx.fill();
-               },
-               allowDiagonal:false
-            });
-            requestAnimationFrame(solve(algorithm,algorithm.next()));
-            return
-         }
-         ctx.beginPath();
-         ctx.rect(x*SIZE,y*SIZE,SIZE,SIZE);
-         ctx.fill();
-
-         next = iterator.next();
-      }while(!next.done && --i);
-
-      if(!next.done){
-         requestAnimationFrame(maze(iterator,next));
-      }
-     }
-   }
-   function solve(iterator,next){
-      return function(){
-        let i = 5*SPEED;
-        do{
-         next = iterator.next();
-      }while(!next.done && --i);
-
-      if(!next.done){
-         requestAnimationFrame(solve(iterator,next));
-      }else{
-         setTimeout(cycle,4000);
-      }
-     }
-   }
-   requestAnimationFrame(maze(iterator,iterator.next()));
-}
-cycle();
-
-},{"./DFS/DFS":1,"./Node":2,"./aStar":3}]},{},[4]);
-function hexToComplimentary(hex){
-
-    // Convert hex to rgb
-    // Credit to Denis http://stackoverflow.com/a/36253499/4939630
-    var rgb = 'rgb(' + (hex = hex.replace('#', '')).match(new RegExp('(.{' + hex.length/3 + '})', 'g')).map(function(l) { return parseInt(hex.length%2 ? l+l : l, 16); }).join(',') + ')';
-
-    // Get array of RGB values
-    rgb = rgb.replace(/[^\d,]/g, '').split(',');
-
-    var r = rgb[0], g = rgb[1], b = rgb[2];
-
-    // Convert RGB to HSL
-    // Adapted from answer by 0x000f http://stackoverflow.com/a/34946092/4939630
-    r /= 255.0;
-    g /= 255.0;
-    b /= 255.0;
-    var max = Math.max(r, g, b);
-    var min = Math.min(r, g, b);
-    var h, s, l = (max + min) / 2.0;
-
-    if(max == min) {
-        h = s = 0;  //achromatic
-    } else {
-        var d = max - min;
-        s = (l > 0.5 ? d / (2.0 - max - min) : d / (max + min));
-
-        if(max == r && g >= b) {
-            h = 1.0472 * (g - b) / d ;
-        } else if(max == r && g < b) {
-            h = 1.0472 * (g - b) / d + 6.2832;
-        } else if(max == g) {
-            h = 1.0472 * (b - r) / d + 2.0944;
-        } else if(max == b) {
-            h = 1.0472 * (r - g) / d + 4.1888;
-        }
-    }
-
-    h = h / 6.2832 * 360.0 + 0;
-
-    // Shift hue to opposite side of wheel and convert to [0-1] value
-    h+= 120;
-    if (h > 360) { h -= 360; }
-    h /= 360;
-
-    // Convert h s and l values into r g and b values
-    // Adapted from answer by Mohsen http://stackoverflow.com/a/9493060/4939630
-    if(s === 0){
-        r = g = b = l; // achromatic
-    } else {
-        var hue2rgb = function hue2rgb(p, q, t){
-            if(t < 0) t += 1;
-            if(t > 1) t -= 1;
-            if(t < 1/6) return p + (q - p) * 6 * t;
-            if(t < 1/2) return q;
-            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-            return p;
-        };
-
-        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        var p = 2 * l - q;
-
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
-
-    r = Math.round(r * 255);
-    g = Math.round(g * 255); 
-    b = Math.round(b * 255);
-
-    // Convert r b and g values to hex
-    rgb = b | (g << 8) | (r << 16); 
-    return "#" + (0x1000000 | rgb).toString(16).substring(1);
+ * checks if a value has a given bit set to 1
+ * @value the int / uint to test
+ * @mask the bits to check
+ **/
+function bit_isset( value, mask )
+{
+    return ( value & mask ) != 0;
 }
 
-function hexToComplimentary2(hex){
+/**
+ * sets a bit mask to a int / uint
+ * @value the int / uint to set the bit mask onto
+ * @mask the bits to set
+ **/
+function bit_set( value, mask )
+{
+    value |= mask;
+    return value;
+}
 
-    // Convert hex to rgb
-    // Credit to Denis http://stackoverflow.com/a/36253499/4939630
-    var rgb = 'rgb(' + (hex = hex.replace('#', '')).match(new RegExp('(.{' + hex.length/3 + '})', 'g')).map(function(l) { return parseInt(hex.length%2 ? l+l : l, 16); }).join(',') + ')';
+/**
+ * clears a bit mask
+ * @value the int / uint to clear
+ * @mask the bits to clear
+ **/
+function bit_clear( value, mask )
+{
+    value &= ~mask;
+    return value;
+}
 
-    // Get array of RGB values
-    rgb = rgb.replace(/[^\d,]/g, '').split(',');
+/**
+ * toggles a bit mask ( 1s become 0s & 0s become 1s )
+ * @value the int / uint to toggle
+ * @mask the bits to toggle
+ **/
+function bit_toggle( value, mask )
+{
+    value ^= mask;
+    return value;
+}
 
-    var r = rgb[0], g = rgb[1], b = rgb[2];
+var Hexagon = function(){
 
-    // Convert RGB to HSL
-    // Adapted from answer by 0x000f http://stackoverflow.com/a/34946092/4939630
-    r /= 255.0;
-    g /= 255.0;
-    b /= 255.0;
-    var max = Math.max(r, g, b);
-    var min = Math.min(r, g, b);
-    var h, s, l = (max + min) / 2.0;
+    var masks = [];
+    var strokes = [];
 
-    if(max == min) {
-        h = s = 0;  //achromatic
-    } else {
-        var d = max - min;
-        s = (l > 0.5 ? d / (2.0 - max - min) : d / (max + min));
+    var PI = Math.PI;
+    var PI2 = PI * 2;
+    var step = PI / 3;
+    var startAngle;
 
-        if(max == r && g >= b) {
-            h = 1.0472 * (g - b) / d ;
-        } else if(max == r && g < b) {
-            h = 1.0472 * (g - b) / d + 6.2832;
-        } else if(max == g) {
-            h = 1.0472 * (b - r) / d + 2.0944;
-        } else if(max == b) {
-            h = 1.0472 * (r - g) / d + 4.1888;
+    var colors = [
+        "#d3dc5d",
+        "#f0f978",
+        "#e1eb6b",
+        "#bbe272",
+        "#d0f786",
+        "#aced78",
+        "#a5ee8d",
+        "#8bf28c",
+        "#81f3a0",
+        "#38f0ac",
+        "#4dfeba",
+        "#24ffcd"];
+    colors.reverse();
+
+    function Hx( angle){
+
+        startAngle = angle || step / 2;
+        var i = 0;
+        for( var mask = 1; mask < Math.pow( 2, 6 * 2 ); mask *= 2 ){
+
+            masks.push( mask );
+
+            var a = startAngle + i * step;
+            var x = Math.cos( a );
+            var y = Math.sin( a );
+            if( i < 6 ){
+                //radius
+                strokes.push( [ 0, 0, x, y ] );
+            }else{
+                //edge
+                strokes.push( [ x, y, Math.cos( a + step ), Math.sin( a + step ) ] );
+            }
+            i++;
         }
+
+        this.solutions = solutions;
     }
 
-    h = h / 6.2832 * 360.0 + 0;
-
-    // Shift hue to opposite side of wheel and convert to [0-1] value
-    h+= 240;
-    if (h > 360) { h -= 360; }
-    h /= 360;
-
-    // Convert h s and l values into r g and b values
-    // Adapted from answer by Mohsen http://stackoverflow.com/a/9493060/4939630
-    if(s === 0){
-        r = g = b = l; // achromatic
-    } else {
-        var hue2rgb = function hue2rgb(p, q, t){
-            if(t < 0) t += 1;
-            if(t > 1) t -= 1;
-            if(t < 1/6) return p + (q - p) * 6 * t;
-            if(t < 1/2) return q;
-            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-            return p;
-        };
-
-        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        var p = 2 * l - q;
-
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
+    function render( ctx, radius ){
+        ctx.beginPath();
+        for( var i = 0; i < strokes.length; i++ ){
+            ctx.moveTo( strokes[i][0] * radius, strokes[i][1] * radius );
+            ctx.lineTo( strokes[i][2] * radius, strokes[i][3] * radius );
+        }
+        ctx.stroke();
     }
 
-    r = Math.round(r * 255);
-    g = Math.round(g * 255); 
-    b = Math.round(b * 255);
+    function renderKey( ctx, radius, prev, key, t ){
 
-    // Convert r b and g values to hex
-    rgb = b | (g << 8) | (r << 16); 
-    return "#" + (0x1000000 | rgb).toString(16).substring(1);
-}  
+        ctx.save();
+
+        var id = 0, x, y;
+        for( var i = 0; i < masks.length; i++ ){
+
+            x=NaN;
+            y=NaN;
+            if( bit_isset( prev, masks[i] ) && bit_isset( key, masks[i] ) ){
+
+                x = strokes[i][2] * radius;
+                y = strokes[i][3] * radius;
+
+            }else if( bit_isset( key, masks[i] ) ){
+
+                ctx.strokeStyle = colors[id++];
+                x = lerp(t, strokes[i][0] * radius, strokes[i][2] * radius);
+                y = lerp(t, strokes[i][1] * radius, strokes[i][3] * radius);
+
+            }else if( bit_isset( prev, masks[i] )  ){
+
+                if( 1-t <= 0 )continue;
+                ctx.strokeStyle = colors[id++];
+                x = lerp( 1-t, strokes[i][0] * radius, strokes[i][2] * radius );
+                y = lerp( 1-t, strokes[i][1] * radius, strokes[i][3] * radius );
+
+            }
+
+            if( !isNaN(x) ){
+                ctx.strokeStyle = colors[id++];
+                ctx.beginPath();
+                ctx.moveTo( strokes[i][0] * radius, strokes[i][1] * radius );
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+        }
+
+        ctx.restore();
+
+    }
+
+    function distance( ax, ay, bx, by ){
+        var dx = bx - ax;
+        var dy = by - ay;
+        return Math.sqrt(dx*dx+dy*dy);
+    }
+
+    function getEdgeId( x,y, radius ){
+
+        var id = 0;
+        var dc = distance(0,0,x,y);
+        var md0 = Number.POSITIVE_INFINITY, md1=Number.POSITIVE_INFINITY;
+        for( var i = 0; i < masks.length; i++ ){
+
+            var d0 = distance(x,y, strokes[i][0] * radius, strokes[i][1] * radius );
+            var d1 = distance(x,y, strokes[i][2] * radius, strokes[i][3] * radius );
+            if( i < 6 && dc < radius * .75 ){
+
+                if( d1 < md1 ){
+                    md1 = d1;
+                    id = masks[i];
+                }
+            }else if( i > 5 && dc > radius * .75 ){
+                if( d0 < md0 && d1 < md1 ){
+                    md0 = d0;
+                    md1 = d1;
+                    id = masks[i];
+                }
+            }
+        }
+        return id;
+    }
+
+    var p = Hx.prototype;
+    p.constructor = Hx;
+    p.render = render;
+    p.renderKey = renderKey;
+    p.getEdgeId = getEdgeId;
+    return Hx;
+
+}();
+
+var solutions = [
+    21,261,2053,
+    2309, 149, 389, 325, 2181,
+    213, 2183, 2197, 341, 405, 2437, 151, 2325, 849, 976, 2833, 3348, 3904, 3968,
+    215, 469,2453,2516,2389,2513,2961,3412,977,918,2837,3024,3536,2709,
+    2229,1365,3920,3984,2469,2769,543,3476,2897,4032,
+    2517,2515,3861,3921,3988,2965,3413,1367,2421,1494,2647,3399,1431,3463,
+    2771,2899,3478,3974,3907,2901,2294,475,3025,3540,3414,3420,2979,4048,
+    575,1087,2855,3343,
+    2519,4049,2995,2967,3027,3989,3925,3954,3894,1847,3615,4006,2623,4050,
+    3947,4056,4080,3855,3879,2931,2871,3990,2847,3883,3886,
+    4053,4039,2935,3550,3543,2007,3799,3871,3895,2879,3511,4007,3919,
+    3063,4086,4055,4023,4071,3967
+];
+function update(){
+
+    time += ( Date.now() - lastTime ) / 3600;
+    lastTime = Date.now();
+    if( time >= 1 ){
+        k++;
+        time = 0;
+    }
+    k %= solutions.length;
+    var prev = k-1 < 0 ? solutions.length - 1 : (k-1);
+    render( solutions[ prev ] , solutions[ k ] );
+
+    requestAnimationFrame( update );
+
+}
+
+function render( prev, key ){
+
+    radius = Math.min( w, h ) / 2 * .5;
+
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+
+    ctx.restore();
+    ctx.fillStyle = "#101316";
+    ctx.globalAlpha = 1;
+    ctx.fillRect(0,0,w,h);
+
+    ctx.lineJoin = ctx.lineCap = "round";
+    ctx.save();
+    ctx.translate( w/2, h/2 );
+
+    ctx.setLineDash([5, 10]);
+    ctx.lineDashOffset = dash-=.25;
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 2;
+    hx.render( ctx, radius );
+
+    ctx.fillStyle = "#666";
+    var fs = parseInt( radius / 5 );
+    ctx.font= fs + "px Time";
+    var str = ( 1+k );
+    var metric = ctx.measureText( str );
+    ctx.fillText( str, radius - metric.width - fs, radius +  parseInt( radius / 5) );
+    ctx.font= parseInt( radius / 10 ) + "px Time";
+    str = "/"+solutions.length;
+    ctx.fillText( str, radius - fs, radius + parseInt( radius / 5) );
+  
+    ctx.setLineDash([0]);
+    for( var i = 1; i < 5; i++ ){
+
+        ctx.globalAlpha = 1 - i / 5;
+        ctx.lineWidth = 1 + i + 2;
+        hx.renderKey( ctx, radius, prev || 4095, key || 4095, Math.min( 1, time ));
+
+    }
+    ctx.restore();
+
+}
+
+var canvas, ctx, w, h, hx = new Hexagon();
+var k = Math.round((Date.now()/3600) % solutions.length);
+//var k = ( solutions.length - 1 );
+var radius = 150;
+var time = 0;
+var lastTime = Date.now();
+var dash = 0;
+
+window.onload = function(){
+
+    canvas = document.createElement( 'canvas' );
+    document.body.appendChild( canvas );
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    ctx = canvas.getContext("2d");
+    update();
+};
