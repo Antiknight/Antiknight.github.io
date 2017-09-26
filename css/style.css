@@ -55,6 +55,7 @@ body {
 .boxed:hover .item {
   -webkit-transform: translate(0px, 0px) !important;
           transform: translate(0px, 0px) !important;
+          
 }
 
 
