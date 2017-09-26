@@ -39,18 +39,18 @@ body {
 }
 .boxed .item--r {
   background-color: red;
-  -webkit-transform: translate(3px, -3px);
-          transform: translate(3px, -3px);
+  -webkit-transform: translate(13px, -13px);
+          transform: translate(13px, -13px);
 }
 .boxed .item--g {
   background-color: green;
-  -webkit-transform: translate(-3px, -3px);
-          transform: translate(-3px, -3px);
+  -webkit-transform: translate(-13px, -13px);
+          transform: translate(-13px, -13px);
 }
 .boxed .item--b {
   background-color: blue;
-  -webkit-transform: translate(0px, 6px);
-          transform: translate(0px, 6px);
+  -webkit-transform: translate(-10px, 16px);
+          transform: translate(-10px, 16px);
 }
 .boxed:hover .item {
   -webkit-transform: translate(0px, 0px) !important;
