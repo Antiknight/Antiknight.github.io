@@ -39,8 +39,8 @@ body {
 }
 .boxed .item--r {
   background-color: red;
-  -webkit-transform: translate(13px, -13px);
-          transform: translate(13px, -13px);
+  -webkit-transform: translate(-13px, -13px);
+          transform: translate(-13px, -13px);
 }
 .boxed .item--g {
   background-color: green;
